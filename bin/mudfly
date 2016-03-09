@@ -1,0 +1,21 @@
+require 'thor'
+
+require 'mudfly'
+
+class CLI < Thor
+
+  package_name 'Mudfly'
+
+  map '-v' => :version
+
+  desc '-v', 'Show Mudfly version'
+  
+  def version
+
+    puts "Mudfly #{Mudfly::VERSION}"
+
+  end
+
+end
+
+CLI.start(ARGV)
