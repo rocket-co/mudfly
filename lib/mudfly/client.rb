@@ -1,29 +1,28 @@
 require 'json'
-
 require 'mudfly/request'
 
 module Mudfly
-
   class Client
 
     def self.analyze(url, strategy: :desktop)
 
-      unless [:desktop, :mobile].include?(strategy)
-
+      unless [:desktop, :mobile, :test].include?(strategy)
         raise ArgumentError.new('Invalid strategy, only :desktop and :mobile are allowed.')
-
       end
 
       request_url = 'runPagespeed'
 
       query_string = {
-
         :url      => url,
         :strategy => strategy
-
       }
 
-      response_body = JSON.parse( Request.get(request_url, query_string) )
+      if strategy == :test
+        raw_response_body = File.read("/home/amura/rails/mudfly/sample.json")
+      else
+        raw_response_body = Request.get(request_url, query_string)
+      end
+      response_body = JSON.parse raw_response_body
 
       report = OpenStruct.new
 
@@ -33,8 +32,7 @@ module Mudfly
       report.kind          = response_body['kind']
       report.id            = response_body['id']
 
-      report.stats = OpenStruct.new({
-
+      report.stats = OpenStruct.new(
         :resources_number            => response_body['pageStats']['numberResources'],
         :hosts_number                => response_body['pageStats']['numberHosts'],
         :total_request_bytes         => response_body['pageStats']['totalRequestBytes'],
@@ -45,32 +43,81 @@ module Mudfly
         :javascript_response_bytes   => response_body['pageStats']['javascriptResponseBytes'],
         :javascript_resources_number => response_body['pageStats']['numberJsResources'],
         :css_resources_number        => response_body['pageStats']['numberCssResources']
+      )
 
-      })
+      report.rules = response_body['formattedResults']['ruleResults'].values.each.inject([]) do |rules, rule_data|
 
-      report.rules = response_body['formattedResults']['ruleResults'].values.each.inject([]) do |rules, rule_temp|
+        temp_rule = OpenStruct.new(
+          :name   => rule_data['localizedRuleName'],
+          :score  => rule_data['ruleScore'],
+          :impact => rule_data['ruleImpact'],
+          :groups => rule_data['groups']
+        )
 
-        rules << OpenStruct.new({
+        if rule_data.has_key? "summary"
+          temp_rule.summary = replace_args(rule_data["summary"]["format"], rule_data["summary"]["args"])
+        end
 
-          :name   => rule_temp['localizedRuleName'],
-          :score  => rule_temp['ruleScore'],
-          :impact => rule_temp['ruleImpact']
+        if rule_data.has_key? 'urlBlocks'
+          links = []
+          rule_data["urlBlocks"].each do |url_block|
 
-        })
+            if url_block.has_key? 'urls'
+              url_block["urls"].each do |url|
+                links << replace_args(url["result"]["format"], url["result"]["args"])
+              end
+            else
+              if url_block.has_key? 'header'
+                result = url_block["header"]
+              elsif url_block.has_key? 'result'
+                result = url_block["result"]
+              end
 
+              if result.present?
+                links << replace_args(result["format"], result["args"])
+              end
+
+            end
+          end
+
+          temp_rule.links = links
+        end
+
+        rules << temp_rule
       end
 
-      report.version = OpenStruct.new({
-
+      report.version = OpenStruct.new(
         :major => response_body['version']['major'],
         :minor => response_body['version']['minor']
+      )
 
-      })
+      report
+    end # def
 
-      return report
+    def self.replace_args(message, args)
+      if args.present?
+        args.each_with_index do |arg, i|
+          if Mudfly.version == :v1
+            message.sub!("$#{i+1}", arg["value"])
+          elsif Mudfly.version == :v2
+            case arg["type"]
+            when 'LINK', 'HYPERLINK'
+              value = arg["value"]
+              message.sub!("{{BEGIN_LINK}}", "<a href='#{value}'>")
+              message.sub!("{{END_LINK}}", "</a>")
+            else
+              if arg.has_key? 'key'
+                message.sub!("{{" + arg["key"] + "}}", arg["value"])
+              else
+                message += " - " + arg["value"]
+              end
+            end
+          end
+        end
+      end
 
-    end
+      message
+    end # def
 
-  end
-
-end
+  end # Class
+end # Module
