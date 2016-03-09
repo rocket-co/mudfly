@@ -42,7 +42,6 @@ module Mudfly
 
       end
 
-      puts "response #{response}"
       response.body
     end
 
