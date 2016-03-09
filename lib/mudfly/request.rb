@@ -16,8 +16,8 @@ module Mudfly
 
     def self.connection
       connection = Faraday::Connection.new({
-        :url     => "#{Mudfly.endpoint}/Mudfly.version",
-        :headers => { 'User-Agent' => Mudfly.user_agent }
+        :url     => "#{Mudfly.endpoint}/#{Mudfly.version}",
+        :headers => { 'User-Agent' => Mudfly.user_agent}
       })
 
       connection.use Mudfly::Response::HttpException
@@ -29,6 +29,7 @@ module Mudfly
       query_string[:prettyprint] = false
       query_string[:locale]      = Mudfly.locale
       query_string[:key]         = Mudfly.api_key
+      query_string[:screenshot]  = true
 
       response = connection.send(method) do |request|
 
