@@ -19,4 +19,8 @@ module Mudfly extend Configuration
     Client.respond_to?(symbol, include_all) || super(symbol, include_all)
   end
 
+  def self.root
+    File.dirname __dir__
+  end
+
 end # Mudfly

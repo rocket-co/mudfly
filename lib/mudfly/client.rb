@@ -4,7 +4,7 @@ require 'mudfly/request'
 module Mudfly
   class Client
 
-    def self.analyze(url, strategy: :desktop)
+    def self.analyze(url, strategy: :test)
 
       unless [:desktop, :mobile, :test].include?(strategy)
         raise ArgumentError.new('Invalid strategy, only :desktop and :mobile are allowed.')
@@ -18,7 +18,7 @@ module Mudfly
       }
 
       if strategy == :test
-        raw_response_body = File.read("/home/amura/rails/mudfly/sample.json")
+        raw_response_body = File.read("#{Mudfly.root}/sample.json")
       else
         raw_response_body = Request.get(request_url, query_string)
       end
@@ -28,12 +28,12 @@ module Mudfly
 
       report.response_code = response_body['responseCode']
       report.title         = response_body['title']
-      report.score         = response_body['score']
+      report.score         = response_body['ruleGroups']['SPEED']['score']
       report.kind          = response_body['kind']
       report.id            = response_body['id']
-      
+
       if response_body.has_key? "screenshot"
-        report.screenshot    = response_body['screenshot']['data']
+        report.screenshot = response_body['screenshot']['data']
       end
 
       report.stats = OpenStruct.new(
