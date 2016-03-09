@@ -11,7 +11,6 @@ module Mudfly
     class HttpException < Faraday::Response::Middleware
 
       def on_complete(response)
-
         case response[:status].to_i
 
           when 400; raise Mudfly::Error::BadRequest.new(response[:body])

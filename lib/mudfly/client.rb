@@ -31,7 +31,10 @@ module Mudfly
       report.score         = response_body['score']
       report.kind          = response_body['kind']
       report.id            = response_body['id']
-      report.screenshot    = response_body['screenshot']['data']
+      
+      if response_body.has_key? "screenshot"
+        report.screenshot    = response_body['screenshot']['data']
+      end
 
       report.stats = OpenStruct.new(
         :resources_number            => response_body['pageStats']['numberResources'],
