@@ -31,6 +31,7 @@ module Mudfly
       report.score         = response_body['score']
       report.kind          = response_body['kind']
       report.id            = response_body['id']
+      report.screenshot    = response_body['screenshot']['data']
 
       report.stats = OpenStruct.new(
         :resources_number            => response_body['pageStats']['numberResources'],
@@ -42,11 +43,11 @@ module Mudfly
         :image_response_bytes        => response_body['pageStats']['imageResponseBytes'],
         :javascript_response_bytes   => response_body['pageStats']['javascriptResponseBytes'],
         :javascript_resources_number => response_body['pageStats']['numberJsResources'],
-        :css_resources_number        => response_body['pageStats']['numberCssResources']
+        :css_resources_number        => response_body['pageStats']['numberCssResources'],
+        :other_response_bytes        => response_body['pageStats']['otherResponseBytes']
       )
 
       report.rules = response_body['formattedResults']['ruleResults'].values.each.inject([]) do |rules, rule_data|
-
         temp_rule = OpenStruct.new(
           :name   => rule_data['localizedRuleName'],
           :score  => rule_data['ruleScore'],
@@ -61,7 +62,6 @@ module Mudfly
         if rule_data.has_key? 'urlBlocks'
           links = []
           rule_data["urlBlocks"].each do |url_block|
-
             if url_block.has_key? 'urls'
               url_block["urls"].each do |url|
                 links << replace_args(url["result"]["format"], url["result"]["args"])
@@ -76,7 +76,6 @@ module Mudfly
               if result.present?
                 links << replace_args(result["format"], result["args"])
               end
-
             end
           end
 
