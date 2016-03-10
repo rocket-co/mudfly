@@ -39,7 +39,6 @@ module Mudfly
         report.screenshot = response_body['screenshot']['data']
       end
 
-
       report.stats = OpenStruct.new
 
       report.stats.resources_number            = response_body['pageStats']['numberResources'].present? ? response_body['pageStats']['numberResources'] : 0
