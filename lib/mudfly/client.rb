@@ -5,7 +5,6 @@ module Mudfly
   class Client
 
     def self.analyze(url, strategy: :desktop)
-      puts "Strategy: #{strategy}"
 
       unless [:desktop, :mobile, :test_desktop, :test_mobile].include?(strategy)
         raise ArgumentError.new('Invalid strategy, only :desktop and :mobile are allowed.')
