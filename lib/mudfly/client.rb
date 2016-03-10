@@ -4,9 +4,9 @@ require 'mudfly/request'
 module Mudfly
   class Client
 
-    def self.analyze(url, strategy: :test)
+    def self.analyze(url, strategy: :desktop)
 
-      unless [:desktop, :mobile, :test].include?(strategy)
+      unless [:desktop, :mobile, :test_desktop, :test_mobile].include?(strategy)
         raise ArgumentError.new('Invalid strategy, only :desktop and :mobile are allowed.')
       end
 
@@ -17,8 +17,10 @@ module Mudfly
         :strategy => strategy
       }
 
-      if strategy == :test
-        raw_response_body = File.read("#{Mudfly.root}/sample.json")
+      if strategy == :test_desktop
+        raw_response_body = File.read("#{Mudfly.root}/sample_desktop.json")
+      elsif strategy == :test_mobile
+        raw_response_body = File.read("#{Mudfly.root}/sample_mobile.json")
       else
         raw_response_body = Request.get(request_url, query_string)
       end
@@ -36,19 +38,21 @@ module Mudfly
         report.screenshot = response_body['screenshot']['data']
       end
 
-      report.stats = OpenStruct.new(
-        :resources_number            => response_body['pageStats']['numberResources'],
-        :hosts_number                => response_body['pageStats']['numberHosts'],
-        :total_request_bytes         => response_body['pageStats']['totalRequestBytes'],
-        :static_resources_number     => response_body['pageStats']['numberStaticResources'],
-        :html_response_bytes         => response_body['pageStats']['htmlResponseBytes'],
-        :css_response_bytes          => response_body['pageStats']['cssResponseBytes'],
-        :image_response_bytes        => response_body['pageStats']['imageResponseBytes'],
-        :javascript_response_bytes   => response_body['pageStats']['javascriptResponseBytes'],
-        :javascript_resources_number => response_body['pageStats']['numberJsResources'],
-        :css_resources_number        => response_body['pageStats']['numberCssResources'],
-        :other_response_bytes        => response_body['pageStats']['otherResponseBytes']
-      )
+      report.stats = OpenStruct.new
+
+      report.stats.resources_number            = response_body['pageStats']['numberResources'].present? ? response_body['pageStats']['numberResources'] : 0
+      report.stats.hosts_number                = response_body['pageStats']['numberHosts'].present? ? response_body['pageStats']['numberHosts'] : 0
+      report.stats.total_request_bytes         = response_body['pageStats']['totalRequestBytes'].present? ? response_body['pageStats']['totalRequestBytes'] : 0
+      report.stats.static_resources_number     = response_body['pageStats']['numberStaticResources'].present? ? response_body['pageStats']['numberStaticResources'] : 0
+      report.stats.html_response_bytes         = response_body['pageStats']['htmlResponseBytes'].present? ? response_body['pageStats']['htmlResponseBytes'] : 0
+      report.stats.css_response_bytes          = response_body['pageStats']['cssResponseBytes'].present? ? response_body['pageStats']['cssResponseBytes'] : 0
+      report.stats.image_response_bytes        = response_body['pageStats']['imageResponseBytes'].present? ? response_body['pageStats']['imageResponseBytes'] : 0
+      report.stats.javascript_response_bytes   = response_body['pageStats']['javascriptResponseBytes'].present? ? response_body['pageStats']['javascriptResponseBytes'] : 0
+      report.stats.javascript_resources_number = response_body['pageStats']['numberJsResources'].present? ? response_body['pageStats']['numberJsResources'] : 0
+      report.stats.css_resources_number        = response_body['pageStats']['numberCssResources'].present? ? response_body['pageStats']['numberCssResources'] : 0
+      report.stats.other_response_bytes        = response_body['pageStats']['otherResponseBytes'].present? ? response_body['pageStats']['otherResponseBytes'] : 0
+
+      puts "report.stats #{report.stats}"
 
       report.rules = response_body['formattedResults']['ruleResults'].values.each.inject([]) do |rules, rule_data|
         temp_rule = OpenStruct.new(
