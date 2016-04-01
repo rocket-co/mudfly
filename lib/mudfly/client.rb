@@ -52,8 +52,6 @@ module Mudfly
       report.stats.css_resources_number        = response_body['pageStats']['numberCssResources'].present? ? response_body['pageStats']['numberCssResources'] : 0
       report.stats.other_response_bytes        = response_body['pageStats']['otherResponseBytes'].present? ? response_body['pageStats']['otherResponseBytes'] : 0
 
-      puts "report.stats #{report.stats}"
-
       report.rules = response_body['formattedResults']['ruleResults'].values.each.inject([]) do |rules, rule_data|
         temp_rule = OpenStruct.new(
           :name   => rule_data['localizedRuleName'],
