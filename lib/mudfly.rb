@@ -2,29 +2,25 @@ require 'mudfly/configuration'
 require 'mudfly/client'
 
 module Mudfly extend Configuration
-  
+
   # Delegate to Mudfly::Client
 
   def self.method_missing(symbol, *args)
-
     if Client.respond_to?(symbol)
-
-      return Client.send(symbol, *args)
-
+      Client.send(symbol, *args)
     else
-
-      return super
-
+      super
     end
-    
   end
 
   # Delegate to Mudfly::Client
 
   def self.respond_to?(symbol, include_all = false)
+    Client.respond_to?(symbol, include_all) || super(symbol, include_all)
+  end
 
-    return Client.respond_to?(symbol, include_all) || super(symbol, include_all)
-
+  def self.root
+    File.dirname __dir__
   end
 
 end # Mudfly
