@@ -26,42 +26,42 @@ module Mudfly
       end
       response_body = JSON.parse raw_response_body
 
-      report = OpenStruct.new
+      report = {}.with_indifferent_access
 
-      report.response_code = response_body['responseCode']
-      report.title         = response_body['title']
-      report.score         = response_body['ruleGroups']['SPEED']['score']
-      report.kind          = response_body['kind']
-      report.id            = response_body['id']
+      report[:response_code] = response_body['responseCode']
+      report[:title]         = response_body['title']
+      report[:score]         = response_body['ruleGroups']['SPEED']['score']
+      report[:kind]          = response_body['kind']
+      report[:id]            = response_body['id']
 
       if response_body.has_key? "screenshot"
-        report.screenshot = response_body['screenshot']['data']
+        report['screenshot'] = response_body['screenshot']['data']
       end
 
-      report.stats = OpenStruct.new
+      report[:stats] = {}
 
-      report.stats.resources_number            = response_body['pageStats']['numberResources'].present? ? response_body['pageStats']['numberResources'] : 0
-      report.stats.hosts_number                = response_body['pageStats']['numberHosts'].present? ? response_body['pageStats']['numberHosts'] : 0
-      report.stats.total_request_bytes         = response_body['pageStats']['totalRequestBytes'].present? ? response_body['pageStats']['totalRequestBytes'] : 0
-      report.stats.static_resources_number     = response_body['pageStats']['numberStaticResources'].present? ? response_body['pageStats']['numberStaticResources'] : 0
-      report.stats.html_response_bytes         = response_body['pageStats']['htmlResponseBytes'].present? ? response_body['pageStats']['htmlResponseBytes'] : 0
-      report.stats.css_response_bytes          = response_body['pageStats']['cssResponseBytes'].present? ? response_body['pageStats']['cssResponseBytes'] : 0
-      report.stats.image_response_bytes        = response_body['pageStats']['imageResponseBytes'].present? ? response_body['pageStats']['imageResponseBytes'] : 0
-      report.stats.javascript_response_bytes   = response_body['pageStats']['javascriptResponseBytes'].present? ? response_body['pageStats']['javascriptResponseBytes'] : 0
-      report.stats.javascript_resources_number = response_body['pageStats']['numberJsResources'].present? ? response_body['pageStats']['numberJsResources'] : 0
-      report.stats.css_resources_number        = response_body['pageStats']['numberCssResources'].present? ? response_body['pageStats']['numberCssResources'] : 0
-      report.stats.other_response_bytes        = response_body['pageStats']['otherResponseBytes'].present? ? response_body['pageStats']['otherResponseBytes'] : 0
+      report[:stats][:resources_number]            = response_body['pageStats']['numberResources'].present? ? response_body['pageStats']['numberResources'] : 0
+      report[:stats][:hosts_number]                = response_body['pageStats']['numberHosts'].present? ? response_body['pageStats']['numberHosts'] : 0
+      report[:stats][:total_request_bytes]         = response_body['pageStats']['totalRequestBytes'].present? ? response_body['pageStats']['totalRequestBytes'] : 0
+      report[:stats][:static_resources_number]     = response_body['pageStats']['numberStaticResources'].present? ? response_body['pageStats']['numberStaticResources'] : 0
+      report[:stats][:html_response_bytes]         = response_body['pageStats']['htmlResponseBytes'].present? ? response_body['pageStats']['htmlResponseBytes'] : 0
+      report[:stats][:css_response_bytes]          = response_body['pageStats']['cssResponseBytes'].present? ? response_body['pageStats']['cssResponseBytes'] : 0
+      report[:stats][:image_response_bytes]        = response_body['pageStats']['imageResponseBytes'].present? ? response_body['pageStats']['imageResponseBytes'] : 0
+      report[:stats][:javascript_response_bytes]   = response_body['pageStats']['javascriptResponseBytes'].present? ? response_body['pageStats']['javascriptResponseBytes'] : 0
+      report[:stats][:javascript_resources_number] = response_body['pageStats']['numberJsResources'].present? ? response_body['pageStats']['numberJsResources'] : 0
+      report[:stats][:css_resources_number]        = response_body['pageStats']['numberCssResources'].present? ? response_body['pageStats']['numberCssResources'] : 0
+      report[:stats][:other_response_bytes]        = response_body['pageStats']['otherResponseBytes'].present? ? response_body['pageStats']['otherResponseBytes'] : 0
 
-      report.rules = response_body['formattedResults']['ruleResults'].values.each.inject([]) do |rules, rule_data|
-        temp_rule = OpenStruct.new(
+      report['rules'] = response_body['formattedResults']['ruleResults'].values.each.inject([]) do |rules, rule_data|
+        temp_rule = {
           :name   => rule_data['localizedRuleName'],
           :score  => rule_data['ruleScore'],
           :impact => rule_data['ruleImpact'],
           :groups => rule_data['groups']
-        )
+        }
 
         if rule_data.has_key? "summary"
-          temp_rule.summary = replace_args(rule_data["summary"]["format"], rule_data["summary"]["args"])
+          temp_rule[:summary] = replace_args(rule_data["summary"]["format"], rule_data["summary"]["args"])
         end
 
         if rule_data.has_key? 'urlBlocks'
@@ -84,16 +84,16 @@ module Mudfly
             end
           end
 
-          temp_rule.links = links
+          temp_rule[:links] = links
         end
 
         rules << temp_rule
       end
 
-      report.version = OpenStruct.new(
+      report[:version] = {
         :major => response_body['version']['major'],
         :minor => response_body['version']['minor']
-      )
+      }
 
       report
     end # def
